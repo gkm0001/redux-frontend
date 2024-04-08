@@ -4,8 +4,8 @@ import products from '../products.json';
 import DomainFilter from './DomainFilter.jsx';
 import GenderFilter from './GenderFilter.jsx';
 import AvailabilityFilter from './AvailabilityFilter.jsx';
-import { useDispatch  } from 'react-redux';
-import { add } from '../store/CartSlice.jsx';
+import { useDispatch } from 'react-redux';
+import { add, remove } from '../store/CartSlice.jsx'; // Import remove action
 
 function Home() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,11 +55,47 @@ function Home() {
     setCurrentPage(pageNumber);
   };
 
-  const dispatch =  useDispatch();
-  const addToCart = (product)=> {
+  const dispatch = useDispatch();
+  const addToCart = (product) => {
     dispatch(add(product))
- }
+  }
 
+  // Updated function to remove product from cart
+  const removeFromCart = (product) => {
+    dispatch(remove(product))
+  }
+
+  // Calculate start and end pages for pagination
+  let startPage, endPage;
+  if (totalPages <= 4) {
+    startPage = 1;
+    endPage = totalPages;
+  } else if (currentPage <= 2) {
+    startPage = 1;
+    endPage = 4;
+  } else if (currentPage >= totalPages - 1) {
+    startPage = totalPages - 3;
+    endPage = totalPages;
+  } else {
+    startPage = currentPage - 1;
+    endPage = currentPage + 2;
+  }
+
+  // Generate page buttons
+  const pageButtons = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pageButtons.push(
+      <button
+        key={i}
+        onClick={() => paginate(i)}
+        className={`mx-1 px-3 py-1 rounded ${
+          currentPage === i ? 'bg-gray-300' : 'bg-white text-black'
+        }`}
+      >
+        {i}
+      </button>
+    );
+  }
 
   return (
     <div>
@@ -83,15 +119,15 @@ function Home() {
                     <p className="text-gray-600">{product.domain}</p>
                     <p className="text-gray-600">{product.available ? 'Available' : 'Not Available'}</p>
                   </div>
-                  <button 
+                  <button
                     className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 ml-4"
-                    onClick={()=> addToCart(product)}
+                    onClick={() => addToCart(product)}
                   >
                     Add
                   </button>
-                  <button 
-                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 ml-20"
-                    onClick={() => handleAddToCart(product)}
+                  <button
+                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 ml-20" // Change color to red
+                    onClick={() => removeFromCart(product)} // Call removeFromCart function
                   >
                     Delete
                   </button>
@@ -106,19 +142,7 @@ function Home() {
               >
                 Prev
               </button>
-              {[...Array(totalPages).keys()].map((pageNumber) => (
-                <button
-                  key={pageNumber + 1}
-                  onClick={() => paginate(pageNumber + 1)}
-                  className={`mx-1 px-3 py-1 rounded ${
-                    currentPage === pageNumber + 1
-                      ? 'bg-gray-300'
-                      : 'bg-white text-black'
-                  }`}
-                >
-                  {pageNumber + 1}
-                </button>
-              ))}
+              {pageButtons}
               <button
                 onClick={() => paginate(currentPage + 1)}
                 className="mx-1 px-3 py-1 bg-black text-white rounded disabled:opacity-50"
